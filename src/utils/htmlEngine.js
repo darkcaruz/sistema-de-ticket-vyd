@@ -45,33 +45,88 @@ function render(filePath, options, callback) {
 }
 
 function processTemplate(template, data) {
-    // {{#each array}}...{{/each}}
-    template = template.replace(/\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (_, key, inner) => {
-        const arr = resolve(data, key);
-        if (!Array.isArray(arr)) return '';
-        return arr.map((item, index) => {
-            const ctx = { ...data, ...item, '@index': index, '@first': index === 0, '@last': index === arr.length - 1 };
-            return processTemplate(inner, ctx);
-        }).join('');
-    });
+    let result = template;
 
-    // {{#if condition}}...{{else}}...{{/if}}
-    template = template.replace(/\{\{#if\s+([^}]+)\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g, (_, cond, ifBlock, elseBlock = '') => {
-        const val = resolve(data, cond.trim());
-        return val ? processTemplate(ifBlock, data) : processTemplate(elseBlock, data);
-    });
+    // 1. Procesar Bloques (Bucle para manejar anidamiento de afuera hacia adentro)
+    let found;
+    do {
+        found = false;
+        // Buscamos el primer bloque que se abre y su cierre correspondiente balanceado
+        // Regex para detectar la apertura de un bloque (#if, #each, #unless)
+        const blockRegex = /\{\{#(if|each|unless)\s+([^}]+)\}\}/g;
+        let match;
 
-    // {{#unless condition}}...{{/unless}}
-    template = template.replace(/\{\{#unless\s+([^}]+)\}\}([\s\S]*?)\{\{\/unless\}\}/g, (_, cond, block) => {
-        const val = resolve(data, cond.trim());
-        return !val ? processTemplate(block, data) : '';
-    });
+        if ((match = blockRegex.exec(result)) !== null) {
+            const type = match[1];
+            const cond = match[2];
+            const startTag = match[0];
+            const startIndex = match.index;
 
-    // {{variableName}} - escapado
-    template = template.replace(/\{\{(?!#|\/|>)([^}]+)\}\}/g, (_, key) => {
+            // Buscar el cierre {{/type}} balanceado
+            let depth = 1;
+            let currentIndex = startIndex + startTag.length;
+            let endIndex = -1;
+            let elseIndex = -1;
+
+            while (depth > 0 && currentIndex < result.length) {
+                const openTag = `{{#${type}`;
+                const closeTag = `{{/${type}}`;
+                const elseTag = `{{else}}`;
+
+                if (result.startsWith(closeTag, currentIndex)) {
+                    depth--;
+                    if (depth === 0) endIndex = currentIndex;
+                    currentIndex += closeTag.length;
+                } else if (result.startsWith(openTag, currentIndex)) {
+                    depth++;
+                    currentIndex += openTag.length;
+                } else if (type === 'if' && depth === 1 && result.startsWith(elseTag, currentIndex)) {
+                    elseIndex = currentIndex;
+                    currentIndex += elseTag.length;
+                } else {
+                    currentIndex++;
+                }
+            }
+
+            if (endIndex !== -1) {
+                const fullBlock = result.substring(startIndex, endIndex + `{{/${type}}}`.length);
+                let innerContent = "";
+
+                if (type === 'if') {
+                    const condition = resolve(data, cond.trim());
+                    if (elseIndex !== -1) {
+                        const ifPart = result.substring(startIndex + startTag.length, elseIndex);
+                        const elsePart = result.substring(elseIndex + "{{else}}".length, endIndex);
+                        innerContent = condition ? processTemplate(ifPart, data) : processTemplate(elsePart, data);
+                    } else {
+                        const ifPart = result.substring(startIndex + startTag.length, endIndex);
+                        innerContent = condition ? processTemplate(ifPart, data) : "";
+                    }
+                } else if (type === 'unless') {
+                    const condition = resolve(data, cond.trim());
+                    const inside = result.substring(startIndex + startTag.length, endIndex);
+                    innerContent = !condition ? processTemplate(inside, data) : "";
+                } else if (type === 'each') {
+                    const arr = resolve(data, cond.trim());
+                    const inside = result.substring(startIndex + startTag.length, endIndex);
+                    if (Array.isArray(arr)) {
+                        innerContent = arr.map((item, index) => {
+                            const ctx = { ...data, ...item, '@index': index, '@first': index === 0, '@last': index === arr.length - 1 };
+                            return processTemplate(inside, ctx);
+                        }).join('');
+                    }
+                }
+
+                result = result.substring(0, startIndex) + innerContent + result.substring(endIndex + `{{/${type}}}`.length);
+                found = true;
+            }
+        }
+    } while (found);
+
+    // 2. Procesar Variables {{variable}} - Solo las que quedan después de los bloques
+    result = result.replace(/\{\{(?!#|\/|>)([^}]+)\}\}/g, (_, key) => {
         key = key.trim();
         if (key.startsWith('!')) {
-            // Triple-stash {{{! ... }}} = no escape
             const val = resolve(data, key.slice(1).trim());
             return val != null ? String(val) : '';
         }
@@ -80,7 +135,7 @@ function processTemplate(template, data) {
         return escapeHtml(String(val));
     });
 
-    return template;
+    return result;
 }
 
 function resolve(obj, path) {
