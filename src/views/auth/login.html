@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - HelpDesk Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div class="auth-page">
+        <!-- Panel izquierdo decorativo -->
+        <div class="auth-left">
+            <div style="text-align:center;color:#fff;max-width:380px">
+                <div style="font-size:72px;margin-bottom:24px">🎫</div>
+                <h2
+                    style="font-size:28px;font-weight:800;margin-bottom:16px;background:linear-gradient(135deg,#fff,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                    HelpDesk Pro</h2>
+                <p style="color:#64748b;font-size:16px;line-height:1.8">Gestiona solicitudes de soporte, automatiza
+                    tickets y brinda una atención de primera clase.</p>
+                <div style="margin-top:40px;display:flex;flex-direction:column;gap:16px">
+                    <div style="display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:14px">
+                        <span
+                            style="background:rgba(37,99,235,.2);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">✅</span>
+                        Tickets desde web y correo electrónico
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:14px">
+                        <span
+                            style="background:rgba(37,99,235,.2);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">📊</span>
+                        Reportes y estadísticas en tiempo real
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:14px">
+                        <span
+                            style="background:rgba(37,99,235,.2);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">🔔</span>
+                        Notificaciones automáticas por correo
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de login -->
+        <div class="auth-right">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">🎫</div>
+                <div>
+                    <div class="auth-logo-text">HelpDesk Pro</div>
+                    <span class="auth-logo-sub">Mesa de Ayuda Empresarial</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Bienvenido de vuelta</h2>
+                    <p class="text-muted text-sm" style="margin-bottom:24px">Ingresa tus credenciales para continuar</p>
+
+                    {{#if error}}
+                    <div class="alert alert-error">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{error}}
+                    </div>
+                    {{/if}}
+
+                    {{#if expired}}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-clock"></i> Tu sesión ha expirado. Por favor inicia sesión nuevamente.
+                    </div>
+                    {{/if}}
+
+                    <form method="POST" action="/auth/login" id="loginForm">
+                        <div class="form-group">
+                            <label class="form-label" for="email">
+                                <i class="bi bi-envelope"></i> Correo electrónico
+                            </label>
+                            <input type="email" id="email" name="email" class="form-control"
+                                placeholder="usuario@empresa.com" required autocomplete="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="password">
+                                <i class="bi bi-lock"></i> Contraseña
+                            </label>
+                            <div style="position:relative">
+                                <input type="password" id="password" name="password" class="form-control"
+                                    placeholder="••••••••" required autocomplete="current-password">
+                                <button type="button" onclick="togglePass()"
+                                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer"
+                                    id="passToggle">
+                                    <i class="bi bi-eye" id="passIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-full" id="loginBtn"
+                            style="margin-top:8px;padding:11px">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                        </button>
+                    </form>
+
+                    <div class="auth-divider" style="margin-top:20px">
+                        ¿No tienes cuenta?
+                        <a href="/auth/register">Regístrate aquí</a>
+                    </div>
+
+                    <div
+                        style="margin-top:20px;padding:14px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-muted);text-align:center">
+                        <strong>Demo:</strong> admin@helpdesk.local / Admin1234!
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:20px">
+                <a href="/" class="text-muted text-sm">
+                    <i class="bi bi-arrow-left"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePass() {
+            const inp = document.getElementById('password');
+            const ico = document.getElementById('passIcon');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                ico.className = 'bi bi-eye-slash';
+            } else {
+                inp.type = 'password';
+                ico.className = 'bi bi-eye';
+            }
+        }
+        document.getElementById('loginForm').addEventListener('submit', function () {
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i> Verificando...';
+        });
+    </script>
+    <style>
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</body>
+
+</html>

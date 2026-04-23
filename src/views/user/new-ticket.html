@@ -1,0 +1,175 @@
+{{layout "main"}}
+
+<div style="max-width:780px;margin:0 auto">
+    <div class="card">
+        <div class="card-header"
+            style="background:linear-gradient(135deg,#0f172a,#1e40af);border-radius:var(--radius) var(--radius) 0 0;padding:24px">
+            <div>
+                <h2 style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">
+                    <i class="bi bi-plus-circle"></i> Crear Nuevo Ticket
+                </h2>
+                <p style="color:rgba(255,255,255,.6);font-size:14px">Completa el formulario y nuestro equipo te atenderá
+                    a la brevedad</p>
+            </div>
+        </div>
+
+        <div class="card-body">
+            {{#if errors}}
+            <div class="alert alert-error mb-md">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                    <strong>Por favor corrige los siguientes errores:</strong>
+                    {{#each errors}}
+                    <div>• {{msg}}</div>
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+
+            <form method="POST" action="/mis-tickets/nuevo" enctype="multipart/form-data" id="newTicketForm">
+
+                <!-- FILA 1: Asunto -->
+                <div class="form-group">
+                    <label class="form-label" for="subject">
+                        Asunto <span class="required">*</span>
+                    </label>
+                    <input type="text" id="subject" name="subject" class="form-control"
+                        placeholder="Describe brevemente el problema en una línea" value="{{form.subject}}" required
+                        maxlength="255">
+                    <span class="form-hint">Ej: "La impresora del 3er piso no enciende"</span>
+                </div>
+
+                <!-- FILA 2: Departamento y Categoría -->
+                <div class="form-row cols-2">
+                    <div class="form-group">
+                        <label class="form-label" for="departmentId">Departamento</label>
+                        <select id="departmentId" name="departmentId" class="form-control">
+                            <option value="">— Selecciona tu departamento —</option>
+                            {{#each departments}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="categoryId">Categoría</label>
+                        <select id="categoryId" name="categoryId" class="form-control">
+                            <option value="">— Selecciona la categoría —</option>
+                            {{#each categories}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- FILA 3: Prioridad -->
+                <div class="form-group">
+                    <label class="form-label">Prioridad <span class="required">*</span></label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
+                        {{#each priorities}}
+                        <label style="cursor:pointer">
+                            <input type="radio" name="priorityId" value="{{id}}" style="display:none"
+                                class="priority-radio">
+                            <div class="priority-btn"
+                                style="border:2px solid {{color}};border-radius:8px;padding:10px;text-align:center;transition:all .2s;user-select:none">
+                                <div style="font-weight:700;color:{{color}}">{{name}}</div>
+                                <div style="font-size:11px;color:var(--text-muted)">SLA {{sla}}h</div>
+                            </div>
+                        </label>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <!-- FILA 4: Descripción -->
+                <div class="form-group">
+                    <label class="form-label" for="description">
+                        Descripción detallada <span class="required">*</span>
+                    </label>
+                    <textarea id="description" name="description" class="form-control" rows="6"
+                        placeholder="Describe el problema con el mayor detalle posible:&#10;- ¿Qué sucede exactamente?&#10;- ¿Cuándo comenzó?&#10;- ¿Qué ya intentaste hacer?&#10;- ¿Qué equipos o usuarios están afectados?"
+                        required>{{form.description}}</textarea>
+                    <span class="form-hint">Entre más detalles, más rápido podremos ayudarte.</span>
+                </div>
+
+                <!-- FILA 5: Adjuntos -->
+                <div class="form-group">
+                    <label class="form-label" for="attachments">
+                        <i class="bi bi-paperclip"></i> Archivos adjuntos
+                    </label>
+                    <div id="dropzone"
+                        style="border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--bg)"
+                        onmouseover="this.style.borderColor='var(--primary)'"
+                        onmouseout="this.style.borderColor='var(--border)'"
+                        onclick="document.getElementById('attachments').click()">
+                        <div style="font-size:32px;margin-bottom:8px">📎</div>
+                        <div style="font-weight:600;color:var(--text);margin-bottom:4px">Arrastra archivos aquí o haz
+                            clic para seleccionar</div>
+                        <div class="text-xs text-muted" id="fileList">JPG, PNG, PDF, DOC, XLSX, ZIP (máx. 10MB c/u)
+                        </div>
+                    </div>
+                    <input type="file" id="attachments" name="attachments" multiple style="display:none"
+                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+                        onchange="updateFileList(this)">
+                </div>
+
+                <div class="d-flex gap-sm mt-lg">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <i class="bi bi-send"></i> Enviar Ticket
+                    </button>
+                    <a href="/mis-tickets" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Resaltar prioridad seleccionada
+    document.querySelectorAll('.priority-radio').forEach(radio => {
+        radio.addEventListener('change', function () {
+            document.querySelectorAll('.priority-btn').forEach(btn => {
+                btn.style.transform = '';
+                btn.style.background = '';
+            });
+            if (this.checked) {
+                const btn = this.nextElementSibling;
+                btn.style.transform = 'scale(1.02)';
+                btn.style.background = btn.style.borderColor.replace(')', ', .08)').replace('rgb', 'rgba');
+            }
+        });
+    });
+
+    // Seleccionar media prioridad por defecto
+    const medioRadio = document.querySelectorAll('.priority-radio')[2];
+    if (medioRadio) { medioRadio.checked = true; medioRadio.dispatchEvent(new Event('change')); }
+
+    // Lista de archivos
+    function updateFileList(input) {
+        const list = document.getElementById('fileList');
+        if (input.files.length > 0) {
+            const names = Array.from(input.files).map(f => f.name).join(', ');
+            list.innerHTML = `<strong>${input.files.length} archivo(s):</strong> ${names}`;
+            list.style.color = 'var(--primary)';
+        }
+    }
+
+    // Drag & drop
+    const dz = document.getElementById('dropzone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--primary)'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--border)'; });
+    dz.addEventListener('drop', e => {
+        e.preventDefault();
+        dz.style.borderColor = 'var(--border)';
+        const input = document.getElementById('attachments');
+        input.files = e.dataTransfer.files;
+        updateFileList(input);
+    });
+
+    // Submit
+    document.getElementById('newTicketForm').addEventListener('submit', () => {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+    });
+</script>

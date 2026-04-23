@@ -1,0 +1,334 @@
+{{layout "main"}}
+
+<!-- TABS -->
+<div style="display:flex;gap:4px;margin-bottom:24px;border-bottom:2px solid var(--border);padding-bottom:0">
+    <a href="?tab=general" class="tab-btn {{#if tab}}{{/if}}" data-tab="general">⚙️ General</a>
+    <a href="?tab=email" class="tab-btn" data-tab="email">📧 Correo</a>
+    <a href="?tab=departments" class="tab-btn" data-tab="departments">🏢 Departamentos</a>
+    <a href="?tab=categories" class="tab-btn" data-tab="categories">📂 Categorías</a>
+    <a href="?tab=priorities" class="tab-btn" data-tab="priorities">🚨 Prioridades</a>
+</div>
+
+{{#if saved}}
+<div class="alert alert-success mb-md">
+    <i class="bi bi-check-circle"></i> Configuración guardada correctamente.
+</div>
+{{/if}}
+
+<!-- PANEL GENERAL -->
+<div id="tab-general" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-sliders" style="color:var(--primary)"></i>
+            <span class="card-title">Configuración General</span>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/admin/configuracion/settings">
+                <div class="form-row cols-2">
+                    <div class="form-group">
+                        <label class="form-label">Nombre de la empresa</label>
+                        <input type="text" name="company_name" class="form-control" value="{{settings.company_name}}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Prefijo de tickets</label>
+                        <input type="text" name="tickets_prefix" class="form-control"
+                            value="{{settings.tickets_prefix}}" placeholder="TKT">
+                        <span class="form-hint">Ej: TKT, SOPORTE, IT → TKT-00001</span>
+                    </div>
+                </div>
+                <div class="form-row cols-2">
+                    <div class="form-group">
+                        <label class="form-label">Permitir auto-registro</label>
+                        <select name="allow_register" class="form-control">
+                            <option value="true" {{#if settings.allow_register}}{{/if}}>Sí, usuarios pueden registrarse
+                            </option>
+                            <option value="false">No, solo admin crea usuarios</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notificar ticket nuevo al admin</label>
+                        <select name="notify_new" class="form-control">
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Guardar configuración
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- PANEL CORREO -->
+<div id="tab-email" class="tab-content" style="display:none">
+    <form method="POST" action="/admin/configuracion/settings">
+        <input type="hidden" name="tab_redirect" value="email">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <!-- SALIENTE (SMTP) -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-send-check" style="color:var(--primary)"></i>
+                    <span class="card-title">Correo Saliente (SMTP)</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">Servidor SMTP</label>
+                        <input type="text" name="smtp_host" class="form-control" value="{{settings.smtp_host}}"
+                            placeholder="mail.valenzueladelarze.cl">
+                    </div>
+                    <div class="form-row cols-2">
+                        <div class="form-group">
+                            <label class="form-label">Puerto</label>
+                            <input type="number" name="smtp_port" class="form-control" value="{{settings.smtp_port}}"
+                                placeholder="587">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" name="smtp_user" class="form-control" value="{{settings.smtp_user}}"
+                                placeholder="soporte@valenzueladelarze.cl">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="smtp_pass" class="form-control" value="{{settings.smtp_pass}}"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENTRANTE (IMAP) -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-download" style="color:var(--success)"></i>
+                    <span class="card-title">Correo Entrante (IMAP)</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">Servidor IMAP</label>
+                        <input type="text" name="imap_host" class="form-control" value="{{settings.imap_host}}"
+                            placeholder="mail.valenzueladelarze.cl">
+                    </div>
+                    <div class="form-row cols-2">
+                        <div class="form-group">
+                            <label class="form-label">Puerto</label>
+                            <input type="number" name="imap_port" class="form-control" value="{{settings.imap_port}}"
+                                placeholder="993">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Frecuencia (seg)</label>
+                            <input type="number" name="imap_check_interval" class="form-control"
+                                value="{{settings.imap_check_interval}}" placeholder="60">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" name="imap_user" class="form-control" value="{{settings.imap_user}}"
+                            placeholder="soporte@valenzueladelarze.cl">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="imap_pass" class="form-control" value="{{settings.imap_pass}}"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-md">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar Configuración de Correo
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- PANEL DEPARTAMENTOS -->
+<div id="tab-departments" class="tab-content" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-building" style="color:var(--primary)"></i>
+                <span class="card-title">Departamentos ({{departments.length}})</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each departments}}
+                        <tr>
+                            <td class="font-bold">{{name}}</td>
+                            <td class="text-sm text-muted">{{#if email}}{{email}}{{else}}—{{/if}}</td>
+                            <td>
+                                <form method="POST" action="/admin/configuracion/departamentos/{{id}}/delete"
+                                    onsubmit="return confirm('¿Eliminar?')">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i
+                                            class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle" style="color:var(--success)"></i>
+                <span class="card-title">Nuevo Departamento</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/admin/configuracion/departamentos">
+                    <div class="form-group">
+                        <label class="form-label">Nombre <span class="required">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="Ej: Soporte TI">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" name="description" class="form-control" placeholder="Descripción breve">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email del departamento</label>
+                        <input type="email" name="email" class="form-control" placeholder="soporte@empresa.com">
+                    </div>
+                    <button type="submit" class="btn btn-success w-full">
+                        <i class="bi bi-plus"></i> Agregar Departamento
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PANEL CATEGORÍAS -->
+<div id="tab-categories" class="tab-content" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-tags" style="color:var(--primary)"></i>
+                <span class="card-title">Categorías ({{categories.length}})</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Departamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each categories}}
+                        <tr>
+                            <td class="font-bold">{{name}}</td>
+                            <td class="text-sm text-muted">{{#if department}}{{department.name}}{{else}}—{{/if}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle" style="color:var(--success)"></i>
+                <span class="card-title">Nueva Categoría</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/admin/configuracion/categorias">
+                    <div class="form-group">
+                        <label class="form-label">Nombre <span class="required">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="Ej: Hardware">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Departamento</label>
+                        <select name="departmentId" class="form-control">
+                            <option value="">— Sin departamento —</option>
+                            {{#each departments}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-full">
+                        <i class="bi bi-plus"></i> Agregar Categoría
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PANEL PRIORIDADES -->
+<div id="tab-priorities" class="tab-content" style="display:none">
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-exclamation-triangle" style="color:var(--warning)"></i>
+            <span class="card-title">Prioridades</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Nivel</th>
+                        <th>SLA (horas)</th>
+                        <th>Color</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each priorities}}
+                    <tr>
+                        <td><span class="badge" style="background:{{color}}22;color:{{color}}">{{name}}</span></td>
+                        <td>{{level}}</td>
+                        <td>{{sla}}h</td>
+                        <td><span
+                                style="display:inline-block;width:24px;height:24px;border-radius:50%;background:{{color}}"></span>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-btn {
+        padding: 10px 18px;
+        border-radius: 8px 8px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all .2s;
+    }
+
+    .tab-btn:hover {
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background: var(--primary-light);
+    }
+</style>
+
+<script>
+    const tab = new URLSearchParams(location.search).get('tab') || 'general';
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    const curr = document.getElementById('tab-' + tab);
+    if (curr) curr.style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tab) btn.classList.add('active');
+    });
+</script>

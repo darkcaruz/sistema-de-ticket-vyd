@@ -1,0 +1,59 @@
+{{layout "main"}}
+
+<div style="max-width:760px;margin:0 auto">
+    <div class="d-flex items-center justify-between mb-md flex-wrap gap-sm">
+        <div>
+            <h2 style="font-size:20px;font-weight:800">Mis Tickets</h2>
+            <p class="text-muted text-sm">Aquí puedes ver el estado de todas tus solicitudes</p>
+        </div>
+        <a href="/mis-tickets/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nuevo Ticket
+        </a>
+    </div>
+
+    {{#if tickets}}
+    <div style="display:flex;flex-direction:column;gap:12px">
+        {{#each tickets}}
+        <a href="/mis-tickets/{{ticketNumber}}" style="text-decoration:none;display:block" class="animate-fade">
+            <div class="card" style="transition:box-shadow .2s;cursor:pointer"
+                onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+                <div class="card-body" style="padding:16px 20px">
+                    <div class="d-flex items-start gap-md">
+                        <div style="flex:1;min-width:0">
+                            <div class="d-flex items-center gap-sm flex-wrap mb-sm">
+                                <span class="badge badge-{{status}}">{{status}}</span>
+                                {{#if priority}}
+                                <span class="badge"
+                                    style="background:{{priority.color}}22;color:{{priority.color}}">{{priority.name}}</span>
+                                {{/if}}
+                                <span class="text-xs text-muted font-mono">#{{ticketNumber}}</span>
+                            </div>
+                            <div class="font-bold" style="font-size:15px;margin-bottom:4px;color:var(--text)">
+                                {{subject}}</div>
+                            <div class="text-sm text-muted d-flex gap-md flex-wrap">
+                                {{#if department}}<span><i class="bi bi-building"></i> {{department.name}}</span>{{/if}}
+                                {{#if category}}<span><i class="bi bi-tag"></i> {{category.name}}</span>{{/if}}
+                                <span><i class="bi bi-clock"></i> {{createdAt}}</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted" style="margin-top:4px"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {{/each}}
+    </div>
+
+    {{else}}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-icon">🎫</div>
+            <h3>No tienes tickets aún</h3>
+            <p>Cuando tengas una solicitud de soporte, puedes crear un ticket aquí o enviar un correo a soporte.</p>
+            <a href="/mis-tickets/nuevo" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Crear mi primer ticket
+            </a>
+        </div>
+    </div>
+    {{/if}}
+</div>

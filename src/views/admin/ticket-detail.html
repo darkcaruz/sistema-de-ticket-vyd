@@ -1,0 +1,268 @@
+{{layout "main"}}
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+
+    <!-- COLUMNA PRINCIPAL -->
+    <div>
+        <!-- INFO TICKET -->
+        <div class="card mb-md">
+            <div class="card-header"
+                style="background:linear-gradient(135deg,var(--bg-header),#1e40af);color:#fff;border-radius:var(--radius) var(--radius) 0 0">
+                <div style="flex:1">
+                    <div class="d-flex items-center gap-sm mb-sm flex-wrap">
+                        <span class="badge badge-{{ticket.status}}" style="font-size:12px">{{ticket.status}}</span>
+                        {{#if ticket.priority}}
+                        <span class="badge"
+                            style="background:{{ticket.priority.color}}30;color:{{ticket.priority.color}}">
+                            {{ticket.priority.name}}
+                        </span>
+                        {{/if}}
+                        <span class="text-xs" style="color:rgba(255,255,255,.6)">
+                            <i class="bi bi-{{ticket.source}}"></i> Origen: {{ticket.source}}
+                        </span>
+                    </div>
+                    <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">{{ticket.subject}}</h2>
+                    <p style="font-size:13px;color:rgba(255,255,255,.6)">
+                        #{{ticket.ticketNumber}} · {{ticket.createdAt}}
+                    </p>
+                </div>
+            </div>
+
+            <!-- DESCRIPCIÓN ORIGINAL -->
+            <div class="card-body">
+                <div class="d-flex items-center gap-sm mb-md">
+                    <div class="user-avatar" style="width:36px;height:36px;font-size:13px">
+                        {{ticket.requesterName}}
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold">{{ticket.requesterName}}</div>
+                        <div class="text-xs text-muted">{{ticket.requesterEmail}}</div>
+                    </div>
+                    <span class="text-xs text-muted" style="margin-left:auto">{{ticket.createdAt}}</span>
+                </div>
+                <div
+                    style="background:var(--bg);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text)">
+                    {{ticket.description}}</div>
+
+                {{#if ticket.attachments}}
+                <div class="message-attachments" style="margin-top:12px;padding:0">
+                    {{#each ticket.attachments}}
+                    {{#unless replyId}}
+                    <a href="/admin/attachment/{{id}}" class="attachment-chip" download>
+                        <i class="bi bi-paperclip"></i> {{originalName}}
+                        <span class="text-xs text-muted">({{size}}b)</span>
+                    </a>
+                    {{/unless}}
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- CONVERSACIÓN -->
+        <div class="card mb-md">
+            <div class="card-header">
+                <i class="bi bi-chat-left-text" style="color:var(--primary)"></i>
+                <span class="card-title">Conversación</span>
+            </div>
+            <div class="card-body">
+                <div class="conversation">
+                    {{#each ticket.replies}}
+                    <div class="message {{#if isInternal}}internal{{/if}}">
+                        <div
+                            class="message-avatar {{#if user}}{{#if user.role}}{{user.role}}{{/if}}{{/if}} {{#if isInternal}}internal{{/if}}">
+                            {{authorName}}
+                        </div>
+                        <div class="message-bubble {{#if isInternal}}internal{{/if}}">
+                            <div class="message-meta">
+                                <span class="message-author">{{authorName}}</span>
+                                {{#if isInternal}}
+                                <span class="message-internal-tag">🔒 Nota interna</span>
+                                {{/if}}
+                                <span class="message-time">{{createdAt}}</span>
+                            </div>
+                            <div class="message-content">{{message}}</div>
+                            {{#if attachments}}
+                            <div class="message-attachments">
+                                {{#each attachments}}
+                                <a href="/admin/attachment/{{id}}" class="attachment-chip" download>
+                                    <i class="bi bi-paperclip"></i> {{originalName}}
+                                </a>
+                                {{/each}}
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                    {{#unless ticket.replies}}
+                    <div class="empty-state" style="padding:30px">
+                        <div>💬</div>
+                        <p>No hay respuestas aún. Sé el primero en responder.</p>
+                    </div>
+                    {{/unless}}
+                </div>
+            </div>
+        </div>
+
+        <!-- RESPONDER -->
+        {{#unless ticket.status}}
+        {{else}}
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-reply" style="color:var(--primary)"></i>
+                <span class="card-title">Responder</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/admin/tickets/{{ticket.ticketNumber}}/reply" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label">Mensaje <span class="required">*</span></label>
+                        <textarea name="message" class="form-control" rows="5"
+                            placeholder="Escribe tu respuesta aquí..." required id="replyMsg"></textarea>
+                    </div>
+
+                    <div class="d-flex items-center gap-md flex-wrap">
+                        <div class="form-group" style="margin-bottom:0;flex:1">
+                            <label class="form-label text-xs">Adjuntar archivos</label>
+                            <input type="file" name="attachments" multiple class="form-control" style="padding:6px">
+                        </div>
+                        <label
+                            style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--text-muted);margin-top:20px">
+                            <input type="checkbox" name="isInternal" style="width:16px;height:16px">
+                            🔒 Nota interna (solo agentes)
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-sm mt-md">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Enviar Respuesta
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                            onclick="quickReply('Gracias por contactarnos. Estamos revisando tu solicitud y te responderemos a la brevedad.')">
+                            ⚡ Respuesta rápida
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {{/unless}}
+    </div>
+
+    <!-- COLUMNA LATERAL -->
+    <div class="ticket-sidebar" style="position:sticky;top:88px">
+
+        <!-- ACTUALIZAR TICKET -->
+        <div class="card mb-md">
+            <div class="card-header">
+                <i class="bi bi-pencil-square" style="color:var(--primary)"></i>
+                <span class="card-title">Actualizar</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/admin/tickets/{{ticket.ticketNumber}}/update">
+                    <div class="form-group">
+                        <label class="form-label text-xs">Estado</label>
+                        <select name="status" class="form-control">
+                            <option value="nuevo" {{#if ticket.status}}{{/if}}>Nuevo</option>
+                            <option value="abierto">Abierto</option>
+                            <option value="en_proceso">En Proceso</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="resuelto">Resuelto</option>
+                            <option value="cerrado">Cerrado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-xs">Prioridad</label>
+                        <select name="priorityId" class="form-control">
+                            <option value="">— Sin prioridad —</option>
+                            {{#each priorities}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-xs">Asignar a</label>
+                        <select name="assignedToId" class="form-control">
+                            <option value="">— Sin asignar —</option>
+                            {{#each agents}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-xs">Departamento</label>
+                        <select name="departmentId" class="form-control">
+                            <option value="">— Sin departamento —</option>
+                            {{#each departments}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-xs">Categoría</label>
+                        <select name="categoryId" class="form-control">
+                            <option value="">— Sin categoría —</option>
+                            {{#each categories}}
+                            <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="bi bi-check-lg"></i> Guardar cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle" style="color:var(--primary)"></i>
+                <span class="card-title">Información</span>
+            </div>
+            <div class="card-body" style="padding:12px 16px">
+                <div class="ticket-sidebar">
+                    <div class="info-item">
+                        <span class="info-label">Número</span>
+                        <span class="info-value font-mono">#{{ticket.ticketNumber}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Solicitante</span>
+                        <span class="info-value">{{ticket.requesterName}}</span>
+                        <span class="text-xs text-muted">{{ticket.requesterEmail}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Asignado a</span>
+                        <span class="info-value">{{#if
+                            ticket.assignedTo}}{{ticket.assignedTo.name}}{{else}}—{{/if}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Creado</span>
+                        <span class="info-value text-sm">{{ticket.createdAt}}</span>
+                    </div>
+                    {{#if ticket.firstResponseAt}}
+                    <div class="info-item">
+                        <span class="info-label">Primera respuesta</span>
+                        <span class="info-value text-sm">{{ticket.firstResponseAt}}</span>
+                    </div>
+                    {{/if}}
+                    {{#if ticket.resolvedAt}}
+                    <div class="info-item">
+                        <span class="info-label">Resuelto</span>
+                        <span class="info-value text-sm">{{ticket.resolvedAt}}</span>
+                    </div>
+                    {{/if}}
+                    <div class="info-item">
+                        <span class="info-label">Origen</span>
+                        <span class="info-value text-sm">{{ticket.source}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function quickReply(text) {
+        document.getElementById('replyMsg').value = text;
+        document.getElementById('replyMsg').focus();
+    }
+</script>

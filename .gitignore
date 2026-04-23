@@ -1,0 +1,12 @@
+node_modules/
+.env
+database/*.db
+database/*.sqlite
+uploads/*
+!uploads/.gitkeep
+logs/*.log
+.DS_Store
+dist/
+build/
+.vscode/
+.idea/

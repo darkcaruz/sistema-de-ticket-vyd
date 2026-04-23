@@ -1,0 +1,123 @@
+{{layout "main"}}
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+    <!-- TABLA DE USUARIOS -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-people" style="color:var(--primary)"></i>
+            <span class="card-title">Usuarios del sistema ({{users.length}})</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Departamento</th>
+                        <th>Estado</th>
+                        <th>Último ingreso</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each users}}
+                    <tr>
+                        <td>
+                            <div class="d-flex items-center gap-sm">
+                                <div class="user-avatar" style="width:32px;height:32px;font-size:12px">{{name}}</div>
+                                <span class="font-bold text-sm">{{name}}</span>
+                            </div>
+                        </td>
+                        <td class="text-sm text-muted">{{email}}</td>
+                        <td>
+                            <span class="badge
+                {{#if role}}
+                  {{role}}
+                {{/if}}" style="
+                  {{#if role}}
+                    background: {{#if role}}#dbeafe{{/if}};
+                    color: var(--primary);
+                  {{/if}}
+                ">{{role}}</span>
+                        </td>
+                        <td class="text-sm text-muted">{{#if department}}{{department}}{{else}}—{{/if}}</td>
+                        <td>
+                            <span class="badge {{#if active}}badge-resuelto{{else}}badge-cerrado{{/if}}">
+                                {{#if active}}Activo{{else}}Inactivo{{/if}}
+                            </span>
+                        </td>
+                        <td class="text-sm text-muted">{{#if lastLogin}}{{lastLogin}}{{else}}Nunca{{/if}}</td>
+                        <td>
+                            <div class="d-flex gap-sm">
+                                <form method="POST" action="/admin/usuarios/{{id}}/toggle" style="display:inline">
+                                    <button type="submit"
+                                        class="btn btn-sm {{#if active}}btn-warning{{else}}btn-success{{/if}}"
+                                        title="{{#if active}}Desactivar{{else}}Activar{{/if}}">
+                                        {{#if active}}<i class="bi bi-pause"></i>{{else}}<i
+                                            class="bi bi-play"></i>{{/if}}
+                                    </button>
+                                </form>
+                                {{#unless role}}
+                                {{else}}
+                                {{#if role}}
+                                <form method="POST" action="/admin/usuarios/{{id}}/delete"
+                                    onsubmit="return confirm('¿Eliminar usuario?')" style="display:inline">
+                                    <button type="submit" class="btn btn-sm btn-danger"><i
+                                            class="bi bi-trash"></i></button>
+                                </form>
+                                {{/if}}
+                                {{/unless}}
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CREAR USUARIO -->
+    <div class="card" style="position:sticky;top:88px">
+        <div class="card-header">
+            <i class="bi bi-person-plus" style="color:var(--success)"></i>
+            <span class="card-title">Nuevo Usuario</span>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/admin/usuarios/crear">
+                <div class="form-group">
+                    <label class="form-label">Nombre completo <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" required placeholder="Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" required placeholder="juan@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña temporal</label>
+                    <input type="text" name="password" class="form-control" placeholder="Dejar vacío para Temp1234!">
+                    <span class="form-hint">El usuario deberá cambiarla al ingresar.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rol <span class="required">*</span></label>
+                    <select name="role" class="form-control">
+                        <option value="user">Usuario Final</option>
+                        <option value="agent">Agente / Técnico</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departamento</label>
+                    <input type="text" name="department" class="form-control" placeholder="Ej: Soporte TI">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="phone" class="form-control" placeholder="+56 9 1234 5678">
+                </div>
+                <button type="submit" class="btn btn-success w-full">
+                    <i class="bi bi-person-check"></i> Crear Usuario
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

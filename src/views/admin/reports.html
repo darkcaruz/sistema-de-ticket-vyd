@@ -1,0 +1,152 @@
+{{layout "main"}}
+
+<div class="d-flex items-center justify-between mb-md flex-wrap gap-sm">
+    <div>
+        <h2 style="font-size:20px;font-weight:800">Reportes y Estadísticas</h2>
+        <p class="text-muted text-sm">Métricas del sistema de soporte</p>
+    </div>
+    <form method="GET" action="/admin/reportes" class="d-flex gap-sm items-end flex-wrap">
+        <div class="form-group" style="margin-bottom:0">
+            <label class="form-label text-xs">Desde</label>
+            <input type="date" name="from" class="form-control" value="{{filters.from}}" style="min-width:140px">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+            <label class="form-label text-xs">Hasta</label>
+            <input type="date" name="to" class="form-control" value="{{filters.to}}" style="min-width:140px">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-bar-chart"></i> Filtrar
+        </button>
+    </form>
+</div>
+
+<!-- MÉTRICAS PRINCIPALES -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    <div class="stat-card" style="--accent-color:#2563eb">
+        <div class="stat-number">{{stats.total}}</div>
+        <div class="stat-label">Total Tickets</div>
+        <span class="stat-icon">🎫</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#f59e0b">
+        <div class="stat-number">{{stats.open}}</div>
+        <div class="stat-label">Tickets Abiertos</div>
+        <span class="stat-icon">📂</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#10b981">
+        <div class="stat-number">{{stats.closed}}</div>
+        <div class="stat-label">Resueltos/Cerrados</div>
+        <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#7c3aed">
+        <div class="stat-number">{{stats.avgResolutionHours}}h</div>
+        <div class="stat-label">Tiempo Prom. Resolución</div>
+        <span class="stat-icon">⏱️</span>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+
+    <!-- POR ESTADO -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-pie-chart" style="color:var(--primary)"></i>
+            <span class="card-title">Tickets por Estado</span>
+        </div>
+        <div class="card-body">
+            {{#each byStatus}}
+            <div style="margin-bottom:14px">
+                <div class="d-flex justify-between items-center mb-sm">
+                    <span class="badge badge-{{status}}">{{status}}</span>
+                    <span class="font-bold">{{count}}</span>
+                </div>
+                <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
+                    <div
+                        style="height:100%;background:var(--primary);border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+            {{#unless byStatus}}
+            <p class="text-muted text-sm text-center" style="padding:20px">Sin datos</p>
+            {{/unless}}
+        </div>
+    </div>
+
+    <!-- POR PRIORIDAD -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-exclamation-triangle" style="color:var(--warning)"></i>
+            <span class="card-title">Tickets por Prioridad</span>
+        </div>
+        <div class="card-body">
+            {{#each byPriority}}
+            <div style="margin-bottom:14px">
+                <div class="d-flex justify-between items-center mb-sm">
+                    {{#if priority}}
+                    <span class="badge"
+                        style="background:{{priority.color}}22;color:{{priority.color}}">{{priority.name}}</span>
+                    {{else}}
+                    <span class="badge badge-default">Sin prioridad</span>
+                    {{/if}}
+                    <span class="font-bold">{{count}}</span>
+                </div>
+                <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
+                    {{#if priority}}
+                    <div
+                        style="height:100%;background:{{priority.color}};border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+            {{#unless byPriority}}
+            <p class="text-muted text-sm text-center" style="padding:20px">Sin datos</p>
+            {{/unless}}
+        </div>
+    </div>
+</div>
+
+<!-- POR AGENTE -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-person-badge" style="color:var(--primary)"></i>
+        <span class="card-title">Tickets por Agente</span>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Agente</th>
+                    <th>Tickets Asignados</th>
+                    <th>Distribución</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each byAgent}}
+                <tr>
+                    <td class="font-bold">
+                        {{#if assignedTo}}{{assignedTo.name}}{{else}}<span class="text-muted">Sin asignar</span>{{/if}}
+                    </td>
+                    <td><span class="badge badge-abierto">{{count}}</span></td>
+                    <td style="min-width:200px">
+                        <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
+                            <div
+                                style="height:100%;background:var(--primary);border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+                {{#unless byAgent}}
+                <tr>
+                    <td colspan="3">
+                        <div class="empty-state" style="padding:30px">
+                            <p>Sin datos de agentes</p>
+                        </div>
+                    </td>
+                </tr>
+                {{/unless}}
+            </tbody>
+        </table>
+    </div>
+</div>

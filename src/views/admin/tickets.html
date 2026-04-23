@@ -1,0 +1,166 @@
+{{layout "main"}}
+
+<!-- FILTROS -->
+<form method="GET" action="/admin/tickets" class="filter-bar mb-md">
+    <div class="search-box">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" class="form-control" placeholder="Buscar por asunto, número, email..."
+            value="{{filters.q}}">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label text-xs">Estado</label>
+        <select name="status" class="form-control" style="min-width:130px">
+            <option value="">Todos</option>
+            <option value="nuevo" {{#if filters.status}}{{/if}}>Nuevo</option>
+            <option value="abierto">Abierto</option>
+            <option value="en_proceso">En Proceso</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="resuelto">Resuelto</option>
+            <option value="cerrado">Cerrado</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label text-xs">Prioridad</label>
+        <select name="priority" class="form-control" style="min-width:120px">
+            <option value="">Todas</option>
+            {{#each priorities}}
+            <option value="{{id}}">{{name}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label text-xs">Departamento</label>
+        <select name="department" class="form-control" style="min-width:140px">
+            <option value="">Todos</option>
+            {{#each departments}}
+            <option value="{{id}}">{{name}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label text-xs">Agente</label>
+        <select name="agent" class="form-control" style="min-width:130px">
+            <option value="">Todos</option>
+            <option value="none">Sin Asignar</option>
+            {{#each agents}}
+            <option value="{{id}}">{{name}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <div class="d-flex gap-sm items-center" style="margin-top:20px">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel"></i> Filtrar
+        </button>
+        <a href="/admin/tickets" class="btn btn-secondary btn-sm">
+            <i class="bi bi-x"></i> Limpiar
+        </a>
+    </div>
+</form>
+
+<!-- TABLA -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-ticket-perforated" style="color:var(--primary)"></i>
+        <span class="card-title">Tickets ({{pagination.total}})</span>
+        <a href="/mis-tickets/nuevo" class="btn btn-primary btn-sm" style="margin-left:auto">
+            <i class="bi bi-plus-lg"></i> Nuevo Ticket
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Asunto</th>
+                    <th>Solicitante</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Departamento</th>
+                    <th>Asignado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each tickets}}
+                <tr onclick="window.location='/admin/tickets/{{ticketNumber}}'" style="cursor:pointer">
+                    <td><span class="td-ticket-num">{{ticketNumber}}</span></td>
+                    <td>
+                        <div class="td-subject truncate" style="max-width:260px" title="{{subject}}">{{subject}}</div>
+                        {{#if source}}
+                        <span class="text-xs text-muted">
+                            {{#if source}}<i class="bi bi-{{source}}"></i> {{source}}{{/if}}
+                        </span>
+                        {{/if}}
+                    </td>
+                    <td>
+                        <div class="text-sm font-bold">{{requesterName}}</div>
+                        <div class="text-xs text-muted">{{requesterEmail}}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{status}}">{{status}}</span>
+                    </td>
+                    <td>
+                        {{#if priority}}
+                        <span class="badge"
+                            style="background:{{priority.color}}22;color:{{priority.color}}">{{priority.name}}</span>
+                        {{else}}—{{/if}}
+                    </td>
+                    <td class="text-sm text-muted">{{#if department}}{{department.name}}{{else}}—{{/if}}</td>
+                    <td class="text-sm">
+                        {{#if assignedTo}}
+                        <span class="d-flex items-center gap-sm">
+                            <span
+                                style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700">{{assignedTo.name}}</span>
+                            {{assignedTo.name}}
+                        </span>
+                        {{else}}<span class="text-muted">—</span>{{/if}}
+                    </td>
+                    <td class="text-sm text-muted" style="white-space:nowrap">{{createdAt}}</td>
+                </tr>
+                {{/each}}
+                {{#unless tickets}}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎫</div>
+                            <h3>Sin tickets</h3>
+                            <p>No hay tickets que coincidan con los filtros aplicados.</p>
+                            <a href="/admin/tickets" class="btn btn-secondary">Limpiar filtros</a>
+                        </div>
+                    </td>
+                </tr>
+                {{/unless}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    {{#if pagination.totalPages}}
+    <div class="card-footer">
+        <div class="d-flex items-center justify-between flex-wrap gap-sm">
+            <span class="text-sm text-muted">
+                Mostrando {{pagination.offset}} – {{pagination.total}} de {{pagination.total}} tickets
+            </span>
+            <div class="pagination">
+                {{#if pagination.hasPrev}}
+                <a href="?page={{pagination.page}}&q={{filters.q}}&status={{filters.status}}" class="page-btn">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                {{/if}}
+                <span class="page-btn active">{{pagination.page}} / {{pagination.totalPages}}</span>
+                {{#if pagination.hasNext}}
+                <a href="?page={{pagination.page}}&q={{filters.q}}&status={{filters.status}}" class="page-btn">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{/if}}
+</div>

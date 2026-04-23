@@ -1,0 +1,55 @@
+{{layout "main"}}
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-shield-check" style="color:var(--primary)"></i>
+        <span class="card-title">Registro de Auditoría</span>
+        <span class="text-muted text-sm" style="margin-left:auto">Últimas 200 acciones</span>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Usuario</th>
+                    <th>Acción</th>
+                    <th>Entidad</th>
+                    <th>Detalles</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each logs}}
+                <tr>
+                    <td class="text-xs text-muted" style="white-space:nowrap">{{createdAt}}</td>
+                    <td class="text-sm">
+                        {{#if user}}
+                        <span class="font-bold">{{user.name}}</span><br>
+                        <span class="text-xs text-muted">{{user.email}}</span>
+                        {{else}}
+                        <span class="text-muted">Sistema</span>
+                        {{/if}}
+                    </td>
+                    <td>
+                        <span class="badge badge-abierto" style="font-size:10px;text-transform:none">{{action}}</span>
+                    </td>
+                    <td class="text-sm text-muted">{{#if entity}}{{entity}} #{{entityId}}{{else}}—{{/if}}</td>
+                    <td class="text-xs text-muted font-mono"
+                        style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{details}}</td>
+                    <td class="text-xs text-muted font-mono">{{ip}}</td>
+                </tr>
+                {{/each}}
+                {{#unless logs}}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state" style="padding:30px">
+                            <div>🛡️</div>
+                            <p>Sin registros de auditoría</p>
+                        </div>
+                    </td>
+                </tr>
+                {{/unless}}
+            </tbody>
+        </table>
+    </div>
+</div>

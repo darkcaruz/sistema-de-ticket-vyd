@@ -1,0 +1,113 @@
+{{layout "main"}}
+
+<!-- STATS -->
+<div class="stats-grid">
+    <div class="stat-card" style="--accent-color:#7c3aed">
+        <div class="stat-number">{{stats.nuevo}}</div>
+        <div class="stat-label">Nuevos</div>
+        <span class="stat-icon">🆕</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#2563eb">
+        <div class="stat-number">{{stats.abierto}}</div>
+        <div class="stat-label">Abiertos</div>
+        <span class="stat-icon">📂</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#f59e0b">
+        <div class="stat-number">{{stats.en_proceso}}</div>
+        <div class="stat-label">En Proceso</div>
+        <span class="stat-icon">⚙️</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#ef4444">
+        <div class="stat-number">{{stats.pendiente}}</div>
+        <div class="stat-label">Pendientes</div>
+        <span class="stat-icon">⏳</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#10b981">
+        <div class="stat-number">{{stats.resuelto}}</div>
+        <div class="stat-label">Resueltos</div>
+        <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#64748b">
+        <div class="stat-number">{{stats.cerrado}}</div>
+        <div class="stat-label">Cerrados</div>
+        <span class="stat-icon">🔒</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#f97316">
+        <div class="stat-number">{{stats.unassigned}}</div>
+        <div class="stat-label">Sin Asignar</div>
+        <span class="stat-icon">👤</span>
+    </div>
+    <div class="stat-card" style="--accent-color:#1e293b">
+        <div class="stat-number">{{stats.total}}</div>
+        <div class="stat-label">Total</div>
+        <span class="stat-icon">🎫</span>
+    </div>
+</div>
+
+<!-- ACCESOS RÁPIDOS -->
+<div class="d-flex gap-sm mb-md flex-wrap">
+    <a href="/admin/tickets?status=nuevo" class="btn btn-sm" style="background:#ede9fe;color:#7c3aed">
+        <i class="bi bi-inbox"></i> Ver Nuevos
+    </a>
+    <a href="/admin/tickets?agent=none" class="btn btn-sm" style="background:#ffedd5;color:#9a3412">
+        <i class="bi bi-person-x"></i> Sin Asignar
+    </a>
+    <a href="/mis-tickets/nuevo" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> Nuevo Ticket
+    </a>
+</div>
+
+<!-- TABLA TICKETS RECIENTES -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-clock-history" style="color:var(--primary)"></i>
+        <span class="card-title">Tickets Recientes</span>
+        <a href="/admin/tickets" class="btn btn-sm btn-secondary" style="margin-left:auto">Ver todos</a>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Asunto</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Asignado</th>
+                    <th>Departamento</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each recent}}
+                <tr onclick="window.location='/admin/tickets/{{ticketNumber}}'" style="cursor:pointer">
+                    <td><span class="td-ticket-num">{{ticketNumber}}</span></td>
+                    <td><span class="td-subject truncate" style="display:block;max-width:280px"
+                            title="{{subject}}">{{subject}}</span></td>
+                    <td>
+                        <span class="badge badge-{{status}}">{{status}}</span>
+                    </td>
+                    <td>
+                        {{#if priority}}
+                        <span class="badge"
+                            style="background:{{priority.color}}22;color:{{priority.color}}">{{priority.name}}</span>
+                        {{/if}}
+                    </td>
+                    <td class="text-sm text-muted">{{#if assignedTo}}{{assignedTo.name}}{{else}}—{{/if}}</td>
+                    <td class="text-sm text-muted">{{#if department}}{{department.name}}{{else}}—{{/if}}</td>
+                    <td class="text-sm text-muted" style="white-space:nowrap">{{createdAt}}</td>
+                </tr>
+                {{/each}}
+                {{#unless recent}}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state" style="padding:30px">
+                            <div>🎫</div>
+                            <p>No hay tickets aún</p>
+                        </div>
+                    </td>
+                </tr>
+                {{/unless}}
+            </tbody>
+        </table>
+    </div>
+</div>

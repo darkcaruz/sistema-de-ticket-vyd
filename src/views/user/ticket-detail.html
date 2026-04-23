@@ -1,0 +1,154 @@
+{{layout "main"}}
+
+<div style="max-width:780px;margin:0 auto">
+
+    {{#if created}}
+    <div class="alert alert-success mb-md">
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+            <strong>¡Ticket creado exitosamente!</strong><br>
+            Tu solicitud ha sido registrada. Recibirás un correo de confirmación.
+        </div>
+    </div>
+    {{/if}}
+
+    <div class="card">
+        <div class="card-header"
+            style="background:linear-gradient(135deg,#0f172a,#1e40af);border-radius:var(--radius) var(--radius) 0 0">
+            <div style="color:#fff">
+                <div class="d-flex items-center gap-sm mb-sm flex-wrap">
+                    <span class="badge badge-{{ticket.status}}">{{ticket.status}}</span>
+                    {{#if ticket.priority}}
+                    <span class="badge"
+                        style="background:{{ticket.priority.color}}30;color:{{ticket.priority.color}}">{{ticket.priority.name}}</span>
+                    {{/if}}
+                </div>
+                <h2 style="font-size:18px;font-weight:800;color:#fff">{{ticket.subject}}</h2>
+                <p style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px">#{{ticket.ticketNumber}} ·
+                    {{ticket.createdAt}}</p>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- META INFO -->
+            <div
+                style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:24px;padding:16px;background:var(--bg);border-radius:8px">
+                <div>
+                    <div class="info-label">Estado</div>
+                    <span class="badge badge-{{ticket.status}}">{{ticket.status}}</span>
+                </div>
+                <div>
+                    <div class="info-label">Prioridad</div>
+                    <div class="info-value text-sm">{{#if ticket.priority}}{{ticket.priority.name}}{{else}}—{{/if}}
+                    </div>
+                </div>
+                <div>
+                    <div class="info-label">Departamento</div>
+                    <div class="info-value text-sm">{{#if ticket.department}}{{ticket.department.name}}{{else}}—{{/if}}
+                    </div>
+                </div>
+                <div>
+                    <div class="info-label">Categoría</div>
+                    <div class="info-value text-sm">{{#if ticket.category}}{{ticket.category.name}}{{else}}—{{/if}}
+                    </div>
+                </div>
+                <div>
+                    <div class="info-label">Asignado a</div>
+                    <div class="info-value text-sm">{{#if
+                        ticket.assignedTo}}{{ticket.assignedTo.name}}{{else}}Pendiente{{/if}}</div>
+                </div>
+            </div>
+
+            <!-- DESCRIPCIÓN ORIGINAL -->
+            <div class="d-flex items-center gap-sm mb-sm">
+                <div class="user-avatar" style="width:36px;height:36px;font-size:13px">{{ticket.requesterName}}</div>
+                <div>
+                    <div class="text-sm font-bold">Tú ({{ticket.requesterName}})</div>
+                    <div class="text-xs text-muted">{{ticket.createdAt}}</div>
+                </div>
+            </div>
+            <div
+                style="background:var(--bg);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;margin-bottom:24px;white-space:pre-wrap">
+                {{ticket.description}}</div>
+
+            <!-- ADJUNTOS DEL TICKET -->
+            {{#if ticket.attachments}}
+            <div class="message-attachments" style="padding:0;margin-bottom:20px">
+                {{#each ticket.attachments}}
+                {{#unless replyId}}
+                <a href="/admin/attachment/{{id}}" class="attachment-chip" download>
+                    <i class="bi bi-paperclip"></i> {{originalName}}
+                </a>
+                {{/unless}}
+                {{/each}}
+            </div>
+            {{/if}}
+
+            <hr class="separator">
+
+            <!-- CONVERSACIÓN -->
+            <div class="conversation">
+                {{#each ticket.replies}}
+                <div class="message">
+                    <div class="message-avatar {{#if user}}agent{{/if}}">{{authorName}}</div>
+                    <div class="message-bubble">
+                        <div class="message-meta">
+                            <span class="message-author">
+                                {{authorName}}
+                                {{#if user}}{{#if user.role}}<span
+                                    style="font-size:10px;color:var(--text-muted);font-weight:400">(soporte)</span>{{/if}}{{/if}}
+                            </span>
+                            <span class="message-time">{{createdAt}}</span>
+                        </div>
+                        <div class="message-content">{{message}}</div>
+                        {{#if attachments}}
+                        <div class="message-attachments">
+                            {{#each attachments}}
+                            <a href="/admin/attachment/{{id}}" class="attachment-chip" download>
+                                <i class="bi bi-paperclip"></i> {{originalName}}
+                            </a>
+                            {{/each}}
+                        </div>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/each}}
+                {{#unless ticket.replies}}
+                <div class="empty-state" style="padding:24px">
+                    <div>💬</div>
+                    <p>Sin respuestas aún. Pronto alguien de soporte te atenderá.</p>
+                </div>
+                {{/unless}}
+            </div>
+
+            <!-- RESPONDER (solo si no está cerrado) -->
+            {{#unless ticket.status}}
+            {{else}}
+            <hr class="separator">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:16px">
+                <i class="bi bi-reply"></i> Agregar comentario
+            </h3>
+            <form method="POST" action="/mis-tickets/{{ticket.ticketNumber}}/responder" enctype="multipart/form-data">
+                <div class="form-group">
+                    <textarea name="message" class="form-control" rows="4"
+                        placeholder="Escribe tu comentario o información adicional..." required></textarea>
+                </div>
+                <div class="d-flex items-center gap-md flex-wrap">
+                    <div class="form-group" style="margin-bottom:0;flex:1">
+                        <input type="file" name="attachments" multiple class="form-control" style="padding:6px">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:0;white-space:nowrap">
+                        <i class="bi bi-send"></i> Enviar
+                    </button>
+                </div>
+            </form>
+            {{/unless}}
+        </div>
+    </div>
+
+    <div class="mt-md d-flex gap-sm">
+        <a href="/mis-tickets" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Volver a mis tickets
+        </a>
+    </div>
+</div>
