@@ -250,10 +250,14 @@ async function checkInbox() {
         await connection.openBox(s.imap_mailbox);
         console.log('📂 Carpeta abierta con éxito.');
 
-        const searchCriteria = ['ALL'];
+        // Buscamos correos de los últimos 2 días para no saturar al servidor
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+        const searchCriteria = [['SINCE', twoDaysAgo]];
         const fetchOptions = { bodies: [''], markSeen: false, struct: true };
 
-        console.log('🔎 Solicitando lista de mensajes (ALL)...');
+        console.log('🔎 Solicitando correos de los últimos 2 días...');
 
         // Timeout de 20 segundos para la búsqueda
         const searchTimeout = new Promise((_, reject) =>
