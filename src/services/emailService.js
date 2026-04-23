@@ -259,16 +259,16 @@ async function checkInbox() {
             });
         });
 
-        console.log(`🔎 Total en bandeja: ${uids.length}. Analizando los últimos 15...`);
+        console.log(`🔎 Total en bandeja: ${uids.length}. Analizando los últimos 50...`);
 
-        // Tomamos los últimos 15
-        const lastUids = uids.slice(-15);
+        // Tomamos los últimos 50
+        const lastUids = uids.slice(-50);
         if (lastUids.length === 0) {
             console.log('📬 Bandeja vacía.');
             return;
         }
 
-        // Descargamos contenido y cabeceras de esos 15 UIDs específicos
+        // Descargamos contenido y cabeceras de esos 50 UIDs específicos
         const fetchOptions = { bodies: ['', 'HEADER.FIELDS (SUBJECT)'], markSeen: false };
         const messages = await connection.search([['UID', lastUids.join(',')]], fetchOptions);
 
