@@ -369,6 +369,9 @@ router.post('/usuarios/:id/delete', isAdmin, async (req, res) => {
 router.post('/configuracion/test-email', isAdmin, async (req, res) => {
     const { type, smtp_host, smtp_port, smtp_user, smtp_pass, imap_host, imap_port, imap_user, imap_pass } = req.body;
 
+    // Función de tiempo límite
+    const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (Timeout). Verifica que el servidor de correo sea accesible desde este servidor Linux.')), ms));
+
     try {
         if (type === 'smtp') {
             const nodemailer = require('nodemailer');
@@ -379,8 +382,8 @@ router.post('/configuracion/test-email', isAdmin, async (req, res) => {
                 auth: { user: smtp_user, pass: smtp_pass },
                 tls: { rejectUnauthorized: false }
             });
-            await transporter.verify();
-            return res.json({ success: true, message: 'Conexión SMTP exitosa. El servidor está listo para enviar correos.' });
+            await Promise.race([transporter.verify(), timeout(10000)]);
+            return res.json({ success: true, message: 'Conexión SMTP exitosa.' });
         } else if (type === 'imap') {
             const imaps = require('imap-simple');
             const config = {
@@ -394,11 +397,12 @@ router.post('/configuracion/test-email', isAdmin, async (req, res) => {
                     tlsOptions: { rejectUnauthorized: false }
                 }
             };
-            const connection = await imaps.connect(config);
-            connection.end();
-            return res.json({ success: true, message: 'Conexión IMAP exitosa. El sistema puede leer correos de esta casilla.' });
+            const connection = await Promise.race([imaps.connect(config), timeout(10000)]);
+            if (connection) connection.end();
+            return res.json({ success: true, message: 'Conexión IMAP exitosa.' });
         }
     } catch (err) {
+        console.error('❌ Error test-email:', err.message);
         return res.json({ success: false, error: err.message });
     }
 });
