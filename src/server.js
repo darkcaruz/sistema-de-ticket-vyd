@@ -25,26 +25,27 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
-const publicPath = path.resolve(__dirname, '..', 'public');
-console.log('📂 Sirviendo archivos estáticos desde:', publicPath);
-app.use(express.static(publicPath, {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+const publicPaths = [
+    path.resolve(__dirname, '..', 'public'),
+    path.join(process.cwd(), 'public'),
+    './public'
+];
+
+publicPaths.forEach(p => {
+    if (fs.existsSync(p)) {
+        console.log('📂 Carpeta estática encontrada en:', p);
+        app.use(express.static(p, {
+            setHeaders: (res, path) => {
+                if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+            }
+        }));
     }
-}));
+});
 app.use('/uploads', express.static(path.resolve('./uploads')));
 
 // ─── SEGURIDAD ────────────────────────────────────────────────
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdn.jsdelivr.net"],
-            fontSrc: ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
-            imgSrc: ["'self'", "data:", "blob:"],
-        }
-    },
+    contentSecurityPolicy: false, // Desactivado temporalmente para diagnosticar carga de CSS
     crossOriginEmbedderPolicy: false
 }));
 
