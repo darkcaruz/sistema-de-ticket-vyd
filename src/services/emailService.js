@@ -250,29 +250,33 @@ async function checkInbox() {
         await connection.openBox(s.imap_mailbox);
         console.log('📂 Carpeta abierta con éxito.');
 
-        console.log('🔎 Solicitando los últimos 15 correos (ALL)...');
+        console.log('🔎 Obteniendo lista de IDs (UIDs)...');
 
-        const fetchOptions = { bodies: [''], markSeen: false, struct: true };
+        // Búsqueda ultra rápida de solo IDs
+        const uids = await new Promise((resolve, reject) => {
+            connection.imap.search(['ALL'], (err, results) => {
+                if (err) reject(err); else resolve(results);
+            });
+        });
 
-        // Timeout de 20 segundos
-        const imapActionTimeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Tiempo IMAP agotado (Timeout)')), 20000)
-        );
+        console.log(`🔎 Total en bandeja: ${uids.length}. Analizando los últimos 15...`);
 
-        // Volvemos a search pero pedimos ALL y filtramos los últimos nosotros
-        const allMessages = await Promise.race([
-            connection.search(['ALL'], fetchOptions),
-            imapActionTimeout
-        ]);
+        // Tomamos los últimos 15
+        const lastUids = uids.slice(-15);
+        if (lastUids.length === 0) {
+            console.log('📬 Bandeja vacía.');
+            return;
+        }
 
-        const messages = allMessages.slice(-15);
-        console.log(`🔎 Traídos ${messages.length} mensajes. Analizando nuevos...`);
+        // Descargamos contenido solo de esos 15
+        const fetchOptions = { bodies: [''], markSeen: false };
+        const messages = await connection.fetch(lastUids, fetchOptions);
 
         let processedCount = 0;
         for (const msg of messages) {
             const isSeen = msg.attributes.flags.includes('\\Seen');
             if (!isSeen) {
-                console.log(`📩 Procesando correo nuevo ID: ${msg.attributes.uid}...`);
+                console.log(`📩 Detectado correo nuevo UID: ${msg.attributes.uid}. Procesando...`);
                 const all = msg.parts.find(p => p.which === '');
                 if (all) {
                     await processIncomingEmail(all.body);
