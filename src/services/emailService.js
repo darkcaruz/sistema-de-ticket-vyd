@@ -250,29 +250,29 @@ async function checkInbox() {
         await connection.openBox(s.imap_mailbox);
         console.log('📂 Carpeta abierta con éxito.');
 
-        console.log('🔎 Solicitando los últimos 10 correos directamente por posición...');
+        console.log('🔎 Solicitando los últimos 15 correos (ALL)...');
 
-        // Usamos el rango '*:*-10' para pedir los últimos 10 mensajes sin tener que buscar
         const fetchOptions = { bodies: [''], markSeen: false, struct: true };
 
         // Timeout de 20 segundos
-        const fetchTimeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Tiempo de respuesta IMAP agotado (Timeout)')), 20000)
+        const imapActionTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Tiempo IMAP agotado (Timeout)')), 20000)
         );
 
-        // En lugar de search, usamos fetch directamente sobre el rango final
-        const messages = await Promise.race([
-            connection.fetch('*:*-10', fetchOptions),
-            fetchTimeout
+        // Volvemos a search pero pedimos ALL y filtramos los últimos nosotros
+        const allMessages = await Promise.race([
+            connection.search(['ALL'], fetchOptions),
+            imapActionTimeout
         ]);
 
-        console.log(`🔎 Traídos ${messages.length} mensajes recientes. Analizando nuevos...`);
+        const messages = allMessages.slice(-15);
+        console.log(`🔎 Traídos ${messages.length} mensajes. Analizando nuevos...`);
 
         let processedCount = 0;
         for (const msg of messages) {
             const isSeen = msg.attributes.flags.includes('\\Seen');
             if (!isSeen) {
-                console.log(`📩 Procesando correo nuevo...`);
+                console.log(`📩 Procesando correo nuevo ID: ${msg.attributes.uid}...`);
                 const all = msg.parts.find(p => p.which === '');
                 if (all) {
                     await processIncomingEmail(all.body);
@@ -301,8 +301,9 @@ function startEmailPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
 
     getMailSettings().then(s => {
-        const interval = s.imap_check_interval * 1000;
-        console.log(`📬 Revisando casilla ${s.imap_user} cada ${s.imap_check_interval}s`);
+        let interval = s.imap_check_interval * 1000;
+        if (interval < 60000) interval = 60000; // Mínimo 60 segundos
+        console.log(`📬 Revisando casilla ${s.imap_user} cada ${interval / 1000}s`);
 
         checkInbox();
         pollingInterval = setInterval(checkInbox, interval);
