@@ -270,7 +270,7 @@ async function checkInbox() {
 
         // Descargamos contenido solo de esos 15
         const fetchOptions = { bodies: [''], markSeen: false };
-        const messages = await connection.fetch(lastUids, fetchOptions);
+        const messages = await connection.search({ uid: lastUids }, fetchOptions);
 
         let processedCount = 0;
         for (const msg of messages) {
