@@ -24,6 +24,10 @@ const { startEmailPolling } = require('./services/emailService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.resolve('./uploads')));
+
 // ─── SEGURIDAD ────────────────────────────────────────────────
 app.use(helmet({
     contentSecurityPolicy: {
@@ -34,7 +38,8 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
             imgSrc: ["'self'", "data:", "blob:"],
         }
-    }
+    },
+    crossOriginEmbedderPolicy: false
 }));
 
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500 });
@@ -71,10 +76,6 @@ app.use(session({
 app.set('view engine', 'html');
 app.engine('html', require('./utils/htmlEngine'));
 app.set('views', path.join(__dirname, 'views'));
-
-// ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(path.resolve('./uploads')));
 
 // ─── MIDDLEWARES GLOBALES ─────────────────────────────────────
 app.use(sessionCheck);
