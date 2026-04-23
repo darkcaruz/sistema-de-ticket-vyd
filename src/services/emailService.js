@@ -268,21 +268,26 @@ async function checkInbox() {
             return;
         }
 
-        // Descargamos contenido solo de esos 15 UIDs específicos
-        const fetchOptions = { bodies: [''], markSeen: false };
+        // Descargamos contenido y cabeceras de esos 15 UIDs específicos
+        const fetchOptions = { bodies: ['', 'HEADER.FIELDS (SUBJECT)'], markSeen: false };
         const messages = await connection.search([['UID', lastUids.join(',')]], fetchOptions);
 
         let processedCount = 0;
         for (const msg of messages) {
-            const isSeen = msg.attributes.flags.includes('\\Seen');
+            const flags = msg.attributes.flags || [];
+            const isSeen = flags.some(f => f.toLowerCase().includes('seen'));
+            const subject = msg.parts.find(p => p.which === 'HEADER.FIELDS (SUBJECT)')?.body?.subject?.[0] || 'Sin Asunto';
+
             if (!isSeen) {
-                console.log(`📩 Detectado correo nuevo UID: ${msg.attributes.uid}. Procesando...`);
+                console.log(`📩 PROCESANDO: "${subject}" (UID: ${msg.attributes.uid})`);
                 const all = msg.parts.find(p => p.which === '');
                 if (all) {
                     await processIncomingEmail(all.body);
                     await connection.addFlags(msg.attributes.uid, '\\Seen');
                     processedCount++;
                 }
+            } else {
+                console.log(`💡 SALTADO (Ya leído): "${subject}" (UID: ${msg.attributes.uid}) Flags: [${flags.join(', ')}]`);
             }
         }
 
