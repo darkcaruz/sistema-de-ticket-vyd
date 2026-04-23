@@ -95,6 +95,10 @@
                         <input type="password" name="smtp_pass" class="form-control" value="{{settings.smtp_pass}}"
                             placeholder="••••••••">
                     </div>
+                    <button type="button" class="btn btn-outline btn-sm w-full" onclick="testConnection('smtp')"
+                        style="margin-top:10px">
+                        <i class="bi bi-send"></i> Probar envío (SMTP)
+                    </button>
                 </div>
             </div>
 
@@ -132,6 +136,10 @@
                         <input type="password" name="imap_pass" class="form-control" value="{{settings.imap_pass}}"
                             placeholder="••••••••">
                     </div>
+                    <button type="button" class="btn btn-outline btn-sm w-full" onclick="testConnection('imap')"
+                        style="margin-top:10px">
+                        <i class="bi bi-cloud-check"></i> Probar recepción (IMAP)
+                    </button>
                 </div>
             </div>
         </div>
@@ -331,4 +339,35 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === tab) btn.classList.add('active');
     });
+
+    async function testConnection(type) {
+        const btn = event.currentTarget;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Probando...';
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData(btn.closest('form'));
+            const data = Object.fromEntries(formData.entries());
+            data.type = type;
+
+            const res = await fetch('/admin/configuracion/test-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                alert('✅ Éxito: ' + result.message);
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (e) {
+            alert('❌ Error de comunicación con el servidor');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
 </script>

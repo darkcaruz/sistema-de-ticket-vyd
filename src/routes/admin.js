@@ -366,6 +366,43 @@ router.post('/usuarios/:id/delete', isAdmin, async (req, res) => {
     res.redirect('/admin/usuarios');
 });
 
+router.post('/configuracion/test-email', isAdmin, async (req, res) => {
+    const { type, smtp_host, smtp_port, smtp_user, smtp_pass, imap_host, imap_port, imap_user, imap_pass } = req.body;
+
+    try {
+        if (type === 'smtp') {
+            const nodemailer = require('nodemailer');
+            const transporter = nodemailer.createTransport({
+                host: smtp_host,
+                port: parseInt(smtp_port),
+                secure: parseInt(smtp_port) === 465,
+                auth: { user: smtp_user, pass: smtp_pass },
+                tls: { rejectUnauthorized: false }
+            });
+            await transporter.verify();
+            return res.json({ success: true, message: 'Conexión SMTP exitosa. El servidor está listo para enviar correos.' });
+        } else if (type === 'imap') {
+            const imaps = require('imap-simple');
+            const config = {
+                imap: {
+                    user: imap_user,
+                    password: imap_pass,
+                    host: imap_host,
+                    port: parseInt(imap_port),
+                    tls: parseInt(imap_port) === 993,
+                    authTimeout: 10000,
+                    tlsOptions: { rejectUnauthorized: false }
+                }
+            };
+            const connection = await imaps.connect(config);
+            connection.end();
+            return res.json({ success: true, message: 'Conexión IMAP exitosa. El sistema puede leer correos de esta casilla.' });
+        }
+    } catch (err) {
+        return res.json({ success: false, error: err.message });
+    }
+});
+
 // ─── CONFIGURACIÓN ────────────────────────────────────────────
 router.get('/configuracion', isAdmin, async (req, res) => {
     const [departments, categories, priorities, settingsList] = await Promise.all([
