@@ -215,7 +215,12 @@ async function saveEmailAttachments(attachments, ticketId, replyId) {
 // ─── LEER CORREOS NUEVOS (IMAP) ───────────────────────────────
 async function checkInbox() {
     const s = await getMailSettings();
-    if (!s.imap_host || !s.imap_user) return;
+    if (!s.imap_host || !s.imap_user) {
+        console.log('ℹ️ IMAP no configurado en ajustes web.');
+        return;
+    }
+
+    console.log(`🔍 [${new Date().toLocaleTimeString()}] Iniciando revisión de IMAP para ${s.imap_user}...`);
 
     const config = {
         imap: {
@@ -232,23 +237,29 @@ async function checkInbox() {
     let connection;
     try {
         connection = await imaps.connect(config);
+        console.log('✅ Conexión IMAP establecida.');
+
         await connection.openBox(s.imap_mailbox);
 
         const searchCriteria = ['UNSEEN'];
         const fetchOptions = { bodies: [''], markSeen: true, struct: true };
 
         const messages = await connection.search(searchCriteria, fetchOptions);
-        if (messages.length > 0) {
+
+        if (messages.length === 0) {
+            console.log('📬 No hay correos nuevos (no leídos) para procesar.');
+        } else {
             console.log(`📬 Procesando ${messages.length} correo(s) nuevo(s)...`);
             for (const msg of messages) {
                 const all = msg.parts.find(p => p.which === '');
                 if (all) await processIncomingEmail(all.body);
             }
+            console.log('✅ Fin del procesamiento de correos.');
         }
     } catch (err) {
-        console.error('❌ Error IMAP:', err.message);
+        console.error('❌ Error durante la revisión IMAP:', err.message);
     } finally {
-        if (connection) try { connection.end(); } catch (_) { }
+        if (connection) try { connection.end(); console.log('🔌 Conexión IMAP cerrada.'); } catch (_) { }
     }
 }
 
