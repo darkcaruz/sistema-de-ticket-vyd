@@ -239,15 +239,19 @@ async function checkInbox() {
         connection = await imaps.connect(config);
         console.log('✅ Conexión IMAP establecida.');
 
+        console.log(`📂 Intentando abrir carpeta: "${s.imap_mailbox}"...`);
         await connection.openBox(s.imap_mailbox);
+        console.log('📂 Carpeta abierta con éxito.');
 
         const searchCriteria = ['UNSEEN'];
         const fetchOptions = { bodies: [''], markSeen: true, struct: true };
 
+        console.log('🔎 Buscando mensajes no leídos (UNSEEN)...');
         const messages = await connection.search(searchCriteria, fetchOptions);
+        console.log(`🔎 Resultados de búsqueda: ${messages.length} mensaje(s) encontrado(s).`);
 
         if (messages.length === 0) {
-            console.log('📬 No hay correos nuevos (no leídos) para procesar.');
+            console.log('📬 No hay correos nuevos para procesar.');
         } else {
             console.log(`📬 Procesando ${messages.length} correo(s) nuevo(s)...`);
             for (const msg of messages) {
