@@ -25,7 +25,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
-app.use(express.static(path.join(__dirname, '../public')));
+const publicPath = path.resolve(__dirname, '..', 'public');
+console.log('📂 Sirviendo archivos estáticos desde:', publicPath);
+app.use(express.static(publicPath, {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+    }
+}));
 app.use('/uploads', express.static(path.resolve('./uploads')));
 
 // ─── SEGURIDAD ────────────────────────────────────────────────
