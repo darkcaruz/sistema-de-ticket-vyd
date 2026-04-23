@@ -286,8 +286,11 @@ async function checkInbox() {
             }
         }
 
-        if (processedCount === 0) {
-            console.log('📬 No hay correos nuevos entre los últimos 10.');
+        if (processedCount === 0 && messages.length > 0) {
+            const lastMsg = messages[messages.length - 1];
+            console.log(`📬 No hay nuevos. El último (UID: ${lastMsg.attributes.uid}) tiene estas marcas: [${lastMsg.attributes.flags.join(', ')}]`);
+        } else if (processedCount === 0) {
+            console.log('📬 Bandeja vacía o sin acceso.');
         } else {
             console.log(`✅ Procesados ${processedCount} correos nuevos.`);
         }
