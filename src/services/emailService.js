@@ -263,6 +263,8 @@ async function checkInbox() {
 
         // Tomamos los últimos 50
         const lastUids = uids.slice(-50);
+        console.log(`🔎 UIDs encontrados: ${lastUids.join(', ')}`);
+
         if (lastUids.length === 0) {
             console.log('📬 Bandeja vacía.');
             return;
@@ -271,6 +273,7 @@ async function checkInbox() {
         // Descargamos contenido y cabeceras de esos 50 UIDs específicos
         const fetchOptions = { bodies: ['', 'HEADER.FIELDS (SUBJECT)'], markSeen: false };
         const messages = await connection.search([['UID', lastUids.join(',')]], fetchOptions);
+        console.log(`🔎 Mensajes recuperados del servidor: ${messages.length}`);
 
         let processedCount = 0;
         for (const msg of messages) {
