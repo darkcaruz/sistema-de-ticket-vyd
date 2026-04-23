@@ -268,9 +268,9 @@ async function checkInbox() {
             return;
         }
 
-        // Descargamos contenido solo de esos 15
+        // Descargamos contenido solo de esos 15 UIDs específicos
         const fetchOptions = { bodies: [''], markSeen: false };
-        const messages = await connection.search({ uid: lastUids }, fetchOptions);
+        const messages = await connection.search([['UID', lastUids.join(',')]], fetchOptions);
 
         let processedCount = 0;
         for (const msg of messages) {
