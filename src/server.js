@@ -148,12 +148,9 @@ async function start() {
             console.log('═══════════════════════════════════════════════\n');
         });
 
-        // Iniciar polling de correo
-        if (process.env.IMAP_HOST && process.env.IMAP_USER && process.env.IMAP_USER !== 'soporte@tuempresa.com') {
-            startEmailPolling();
-        } else {
-            console.log('ℹ️  IMAP no configurado - Tickets por email desactivado');
-        }
+        // Iniciar polling de correo (busca config en DB o .env)
+        startEmailPolling();
+        console.log('📬 Monitoreo de tickets por email iniciado.');
 
     } catch (err) {
         console.error('❌ Error iniciando server:', err.message);
