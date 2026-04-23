@@ -254,7 +254,17 @@ async function checkInbox() {
         const fetchOptions = { bodies: [''], markSeen: true, struct: true };
 
         console.log('🔎 Buscando mensajes no leídos (UNSEEN)...');
-        const messages = await connection.search(searchCriteria, fetchOptions);
+
+        // Timeout de 20 segundos para la búsqueda
+        const searchTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Tiempo de búsqueda IMAP agotado (Timeout)')), 20000)
+        );
+
+        const messages = await Promise.race([
+            connection.search(searchCriteria, fetchOptions),
+            searchTimeout
+        ]);
+
         console.log(`🔎 Resultados de búsqueda: ${messages.length} mensaje(s) encontrado(s).`);
 
         if (messages.length === 0) {
