@@ -213,13 +213,20 @@ async function saveEmailAttachments(attachments, ticketId, replyId) {
 }
 
 // ─── LEER CORREOS NUEVOS (IMAP) ───────────────────────────────
+let isChecking = false;
 async function checkInbox() {
+    if (isChecking) {
+        console.log('⏳ Ya hay una revisión de correo en curso. Saltando esta vuelta...');
+        return;
+    }
+
     const s = await getMailSettings();
     if (!s.imap_host || !s.imap_user) {
         console.log('ℹ️ IMAP no configurado en ajustes web.');
         return;
     }
 
+    isChecking = true;
     console.log(`🔍 [${new Date().toLocaleTimeString()}] Iniciando revisión de IMAP para ${s.imap_user}...`);
 
     const config = {
@@ -263,6 +270,7 @@ async function checkInbox() {
     } catch (err) {
         console.error('❌ Error durante la revisión IMAP:', err.message);
     } finally {
+        isChecking = false;
         if (connection) try { connection.end(); console.log('🔌 Conexión IMAP cerrada.'); } catch (_) { }
     }
 }
