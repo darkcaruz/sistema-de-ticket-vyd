@@ -250,32 +250,44 @@ async function checkInbox() {
         await connection.openBox(s.imap_mailbox);
         console.log('📂 Carpeta abierta con éxito.');
 
-        const searchCriteria = ['UNSEEN'];
-        const fetchOptions = { bodies: [''], markSeen: true, struct: true };
+        const searchCriteria = ['ALL'];
+        const fetchOptions = { bodies: [''], markSeen: false, struct: true };
 
-        console.log('🔎 Buscando mensajes no leídos (UNSEEN)...');
+        console.log('🔎 Solicitando lista de mensajes (ALL)...');
 
         // Timeout de 20 segundos para la búsqueda
         const searchTimeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Tiempo de búsqueda IMAP agotado (Timeout)')), 20000)
         );
 
-        const messages = await Promise.race([
+        const allMessages = await Promise.race([
             connection.search(searchCriteria, fetchOptions),
             searchTimeout
         ]);
 
-        console.log(`🔎 Resultados de búsqueda: ${messages.length} mensaje(s) encontrado(s).`);
+        // Solo analizamos los últimos 20 correos para no saturar
+        const messagesToProcess = allMessages.slice(-20);
+        console.log(`🔎 Analizando los últimos ${messagesToProcess.length} mensajes en busca de nuevos...`);
 
-        if (messages.length === 0) {
+        let processedCount = 0;
+        for (const msg of messagesToProcess) {
+            const isSeen = msg.attributes.flags.includes('\\Seen');
+            if (!isSeen) {
+                console.log(`📩 Detectado correo no leído. Procesando...`);
+                const all = msg.parts.find(p => p.which === '');
+                if (all) {
+                    await processIncomingEmail(all.body);
+                    // Marcar como leído
+                    await connection.addFlags(msg.attributes.uid, '\\Seen');
+                    processedCount++;
+                }
+            }
+        }
+
+        if (processedCount === 0) {
             console.log('📬 No hay correos nuevos para procesar.');
         } else {
-            console.log(`📬 Procesando ${messages.length} correo(s) nuevo(s)...`);
-            for (const msg of messages) {
-                const all = msg.parts.find(p => p.which === '');
-                if (all) await processIncomingEmail(all.body);
-            }
-            console.log('✅ Fin del procesamiento de correos.');
+            console.log(`✅ Se procesaron ${processedCount} correos nuevos.`);
         }
     } catch (err) {
         console.error('❌ Error durante la revisión IMAP:', err.message);
