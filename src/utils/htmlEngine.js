@@ -35,8 +35,9 @@ function render(filePath, options, callback) {
             return '';
         });
 
-        // Procesar el contenido con los datos
-        content = processTemplate(content, options);
+        // Procesar el contenido con los datos (convertir Sequelize a plain si es necesario)
+        const renderData = (options && typeof options.get === 'function') ? options.get({ plain: true }) : options;
+        content = processTemplate(content, renderData);
 
         callback(null, content);
     } catch (err) {
@@ -111,7 +112,9 @@ function processTemplate(template, data) {
                     const inside = result.substring(startIndex + startTag.length, endIndex);
                     if (Array.isArray(arr)) {
                         innerContent = arr.map((item, index) => {
-                            const ctx = { ...data, ...item, '@index': index, '@first': index === 0, '@last': index === arr.length - 1 };
+                            // Si es un objeto Sequelize, convertir a objeto plano
+                            const itemData = (item && typeof item.get === 'function') ? item.get({ plain: true }) : item;
+                            const ctx = { ...data, ...itemData, '@index': index, '@first': index === 0, '@last': index === arr.length - 1 };
                             return processTemplate(inside, ctx);
                         }).join('');
                     }
