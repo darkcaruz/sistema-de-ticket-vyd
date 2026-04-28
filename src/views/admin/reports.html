@@ -52,23 +52,12 @@
             <i class="bi bi-pie-chart" style="color:var(--primary)"></i>
             <span class="card-title">Tickets por Estado</span>
         </div>
-        <div class="card-body">
-            {{#each byStatus}}
-            <div style="margin-bottom:14px">
-                <div class="d-flex justify-between items-center mb-sm">
-                    <span class="badge badge-{{status}}">{{status}}</span>
-                    <span class="font-bold">{{count}}</span>
-                </div>
-                <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
-                    <div
-                        style="height:100%;background:var(--primary);border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
-                    </div>
-                </div>
-            </div>
-            {{/each}}
-            {{#unless byStatus}}
+        <div class="card-body" style="position: relative; height: 300px; width: 100%;">
+            {{#if byStatus}}
+            <canvas id="statusChart"></canvas>
+            {{else}}
             <p class="text-muted text-sm text-center" style="padding:20px">Sin datos</p>
-            {{/unless}}
+            {{/if}}
         </div>
     </div>
 
@@ -78,30 +67,12 @@
             <i class="bi bi-exclamation-triangle" style="color:var(--warning)"></i>
             <span class="card-title">Tickets por Prioridad</span>
         </div>
-        <div class="card-body">
-            {{#each byPriority}}
-            <div style="margin-bottom:14px">
-                <div class="d-flex justify-between items-center mb-sm">
-                    {{#if priority}}
-                    <span class="badge"
-                        style="background:{{priority.color}}22;color:{{priority.color}}">{{priority.name}}</span>
-                    {{else}}
-                    <span class="badge badge-default">Sin prioridad</span>
-                    {{/if}}
-                    <span class="font-bold">{{count}}</span>
-                </div>
-                <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
-                    {{#if priority}}
-                    <div
-                        style="height:100%;background:{{priority.color}};border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
-                    </div>
-                    {{/if}}
-                </div>
-            </div>
-            {{/each}}
-            {{#unless byPriority}}
+        <div class="card-body" style="position: relative; height: 300px; width: 100%;">
+            {{#if byPriority}}
+            <canvas id="priorityChart"></canvas>
+            {{else}}
             <p class="text-muted text-sm text-center" style="padding:20px">Sin datos</p>
-            {{/unless}}
+            {{/if}}
         </div>
     </div>
 </div>
@@ -112,41 +83,138 @@
         <i class="bi bi-person-badge" style="color:var(--primary)"></i>
         <span class="card-title">Tickets por Agente</span>
     </div>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Agente</th>
-                    <th>Tickets Asignados</th>
-                    <th>Distribución</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each byAgent}}
-                <tr>
-                    <td class="font-bold">
-                        {{#if assignedTo}}{{assignedTo.name}}{{else}}<span class="text-muted">Sin asignar</span>{{/if}}
-                    </td>
-                    <td><span class="badge badge-abierto">{{count}}</span></td>
-                    <td style="min-width:200px">
-                        <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden">
-                            <div
-                                style="height:100%;background:var(--primary);border-radius:4px;width:{{count}}%;max-width:100%;transition:width .8s ease">
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                {{/each}}
-                {{#unless byAgent}}
-                <tr>
-                    <td colspan="3">
-                        <div class="empty-state" style="padding:30px">
-                            <p>Sin datos de agentes</p>
-                        </div>
-                    </td>
-                </tr>
-                {{/unless}}
-            </tbody>
-        </table>
+    <div class="card-body" style="position: relative; height: 350px; width: 100%; padding: 20px;">
+        {{#if byAgent}}
+        <canvas id="agentChart"></canvas>
+        {{else}}
+        <p class="text-muted text-sm text-center" style="padding:20px">Sin datos de agentes</p>
+        {{/if}}
     </div>
 </div>
+
+<!-- SCRIPTS PARA GRÁFICOS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // Data - Tickets por Estado
+    const statusLabels = [];
+    const statusData = [];
+    const statusColors = [];
+    {{#each byStatus}}
+    statusLabels.push('{{status}}');
+    statusData.push({{count}});
+    if('{{status}}' === 'NUEVO') statusColors.push('#8b5cf6');
+    else if('{{status}}' === 'ABIERTO') statusColors.push('#f59e0b');
+    else if('{{status}}' === 'RESUELTO') statusColors.push('#10b981');
+    else if('{{status}}' === 'CERRADO') statusColors.push('#64748b');
+    else statusColors.push('#3b82f6');
+    {{/each}}
+
+    if(document.getElementById('statusChart')){
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: statusColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#e2e8f0', padding: 20 } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // Data - Tickets por Prioridad
+    const priorityLabels = [];
+    const priorityData = [];
+    const priorityColors = [];
+    {{#each byPriority}}
+    {{#if priority}}
+    priorityLabels.push('{{priority.name}}');
+    priorityColors.push('{{priority.color}}');
+    {{else}}
+    priorityLabels.push('Sin prioridad');
+    priorityColors.push('#64748b');
+    {{/if}}
+    priorityData.push({{count}});
+    {{/each}}
+
+    if(document.getElementById('priorityChart')){
+        new Chart(document.getElementById('priorityChart'), {
+            type: 'pie',
+            data: {
+                labels: priorityLabels,
+                datasets: [{
+                    data: priorityData,
+                    backgroundColor: priorityColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#e2e8f0', padding: 20 } }
+                }
+            }
+        });
+    }
+
+    // Data - Tickets por Agente
+    const agentLabels = [];
+    const agentData = [];
+    {{#each byAgent}}
+    {{#if assignedTo}}
+    agentLabels.push('{{assignedTo.name}}');
+    {{else}}
+    agentLabels.push('Sin asignar');
+    {{/if}}
+    agentData.push({{count}});
+    {{/each}}
+
+    if(document.getElementById('agentChart')){
+        new Chart(document.getElementById('agentChart'), {
+            type: 'bar',
+            data: {
+                labels: agentLabels,
+                datasets: [{
+                    label: 'Tickets Asignados',
+                    data: agentData,
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 6,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(51, 65, 85, 0.5)', drawBorder: false }, 
+                        ticks: { stepSize: 1, color: '#94a3b8' } 
+                    },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { color: '#94a3b8' } 
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
